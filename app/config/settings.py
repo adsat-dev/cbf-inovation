@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
 
-    APP_ENV: str = "development"
+    APP_ENV: str = "prod"
 
     FIREBASE_SERVICE_ACCOUNT_KEY: str = (
         "desa-digital-prod-firebase-adminsdk-fbsvc-1cf3138571.json"

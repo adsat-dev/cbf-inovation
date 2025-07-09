@@ -2,8 +2,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+
+    APP_ENV: str = "development"
+
     FIREBASE_SERVICE_ACCOUNT_KEY: str = (
-        "desa-digital-6c62c-firebase-adminsdk-dw3k1-cfdcfa90b8.json"
+        "desa-digital-prod-firebase-adminsdk-fbsvc-1cf3138571.json"
     )
     firebase_apikey: str
     firebase_auth_domain: str
@@ -11,6 +14,10 @@ class Settings(BaseSettings):
     firebase_storage_bucket: str
     firebase_message_sender_id: str
     firebase_app_id: str
+
+    use_firebase_emulator: bool = False
+    firestore_emulator_host: str = "localhost:8080"
+    auth_emulator_host: str = "localhost:9099"
 
     class Config:
         env_file = ".env"

@@ -20,7 +20,9 @@ class RecommendationEngine:
 
         data = []
         for doc in docs:
-            data.append(doc.to_dict())
+            doc_data = doc.to_dict()
+            doc_data["id"] = doc.id
+            data.append(doc_data)
 
         self.df = pd.DataFrame(data)
 
@@ -33,22 +35,19 @@ class RecommendationEngine:
             .apply(preprocess_text)
 
         # Initialize TF-IDF Vectorizer
-        self.tfidf = TfidfVectorizer(max_features=5000)
+        self.tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, max_df=0.9)
         tfidf_matrix = self.tfidf.fit_transform(self.df['processed_text'])
 
         # Compute cosine similarity matrix
         self.cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
     def get_recommendations(
-        self, title: str, top_n: int = 5
+        self, innovation_id: str, top_n: int = 5
     ) -> list[RecommendationResponse]:
         if self.df is None or self.cosine_sim is None:
             return []
         try:
-            if 'namaInovasi' in self.df.columns:
-                idx = self.df[self.df['namaInovasi'] == title].index[0]
-            else:
-                return []
+            idx = self.df[self.df['id'] == innovation_id].index[0]
         except IndexError:
             return []
 
@@ -57,15 +56,36 @@ class RecommendationEngine:
         sim_scores = sim_scores[1:top_n + 1]
 
         recommendations = []
-        for i, score in sim_scores:
-            rec = RecommendationResponse(
-                inovasi=self.df.iloc[i]['namaInovasi'],
-                kategori=self.df.iloc[i]['kategori'],
-                deskripsi=self.df.iloc[i]['deskripsi'],
-                similarity_score=round(score, 2),
-            )
-            recommendations.append(rec)
+        try:
+            for i, score in sim_scores:
+                row = self.df.iloc[i]
+                # 1. Images: default [] jika nan atau tidak ada
+                raw_images = row.get("images", [])
+                if isinstance(raw_images, float) and pd.isna(raw_images):
+                    images: list[str] = []
+                else:
+                    images = raw_images if isinstance(raw_images, list) else []
 
+                # 2. Tahun dibuat: default None jika nan atau tidak ada, else cast ke str
+                raw_year = row.get("tahunDibuat", None)
+                if isinstance(raw_year, float) and pd.isna(raw_year):
+                    tahun = None
+                else:
+                    tahun = str(raw_year) if raw_year is not None else None
+                rec = RecommendationResponse(
+                    id=row["id"],
+                    inovasi=row["namaInovasi"],
+                    kategori=row["kategori"],
+                    deskripsi=row["deskripsi"],
+                    namaInnovator=row["namaInnovator"],
+                    images=images,
+                    tahunDibuat=tahun,
+                    similarity_score=round(score, 2),
+                )
+                recommendations.append(rec)
+        except KeyError as e:
+            print(f"Error processing recommendation: {str(e)}")
+            return []
         return recommendations
 
 

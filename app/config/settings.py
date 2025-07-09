@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
 
     APP_ENV: str = "prod"
-
-    FIREBASE_SERVICE_ACCOUNT_KEY: str = (
+    FIREBASE_SERVICE_ACCOUNT_B64: Optional[str] = None
+    FIREBASE_SERVICE_ACCOUNT_KEY: Optional[str] = (
         "desa-digital-prod-firebase-adminsdk-fbsvc-1cf3138571.json"
     )
     firebase_apikey: str
